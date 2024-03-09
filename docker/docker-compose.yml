@@ -21,7 +21,7 @@ services:
     image: postgres:alpine
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+      - ./postgres/init:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -53,7 +53,7 @@ services:
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB}
     volumes:
-      - clickhouse/init/:/docker-entrypoint-initdb.d
+      - ./clickhouse/init/:/docker-entrypoint-initdb.d
       - clickhouse:/var/lib/clickhouse
     networks:
       default:

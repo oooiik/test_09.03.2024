@@ -1,0 +1,80 @@
+services:
+  golang:
+    container_name: ${COMPOSE_PROJECT_NAME}-golang
+    image: golang:alpine
+    user: ${USER_ID}:${GROUP_ID}
+    working_dir: /app
+    environment:
+      - GOCACHE=${GOCACHE}:${GOCACHE}:rw
+    volumes:
+      - "./:/app"
+      - golang_cache:${GOCACHE}
+      - ${GOPATH}:/go
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.2
+    tty: true
+    stdin_open: true
+
+  postgres:
+    container_name: ${COMPOSE_PROJECT_NAME}-postgres
+    image: postgres:alpine
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.3
+
+  redis:
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
+    image: redis:alpine
+    volumes:
+      - redis:/data
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.4
+
+  nats:
+    container_name: ${COMPOSE_PROJECT_NAME}-nats
+    image: nats:alpine
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.5
+
+  clickhouse:
+    container_name: ${COMPOSE_PROJECT_NAME}-clickhouse
+    image: clickhouse/clickhouse-server:latest-alpine
+    environment:
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+    volumes:
+      - clickhouse/init/:/docker-entrypoint-initdb.d
+      - clickhouse:/var/lib/clickhouse
+    networks:
+      default:
+        ipv4_address: ${COMPOSE_PROJECT_NETWORK}.6
+
+volumes:
+  golang_cache:
+    driver: local
+  postgres:
+    driver: local
+  redis:
+    driver: local
+  clickhouse:
+    driver: local
+
+networks:
+  default:
+    name: "${COMPOSE_PROJECT_NAME}_default"
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "${COMPOSE_PROJECT_NETWORK}.0/24"
+          gateway: "${COMPOSE_PROJECT_NETWORK}.1"

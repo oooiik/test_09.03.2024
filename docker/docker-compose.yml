@@ -7,7 +7,7 @@ services:
     environment:
       - GOCACHE=${GOCACHE}:${GOCACHE}:rw
     volumes:
-      - "./:/app"
+      - "../golang:/app"
       - golang_cache:${GOCACHE}
       - ${GOPATH}:/go
     networks:

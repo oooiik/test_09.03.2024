@@ -1,7 +1,7 @@
 services:
   golang:
     container_name: ${COMPOSE_PROJECT_NAME}-golang
-    image: golang:alpine
+    image: golang:1.22
     user: ${USER_ID}:${GROUP_ID}
     working_dir: /app
     environment:

@@ -43,3 +43,6 @@ dc-restart:	## restarts docker containers
 
 dc-stop:	## stops docker containers
 	$(DOCKER_COMPOSE) stop
+
+go-bash: ## open bash terminal in golang container
+	$(DOCKER_COMPOSE) exec -it -u $(EXEC_USER) golang bash

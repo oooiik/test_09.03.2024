@@ -1,16 +1,23 @@
 server:
   host: 172.4.0.2
   port: 80
+
 postgres:
   host: 172.4.0.3
   port: 5432
   db: postgres
   user: postgres
   password: postgres
-Clickhouse:
+
+clickhouse:
   host: 172.4.0.8
   port: 8123
   user: clickhouse
   password: clickhouse
+
 nats:
 
+log:
+  level: info
+  writer: console
+  path: log/app.log

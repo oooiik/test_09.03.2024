@@ -2,37 +2,38 @@ package config
 
 import (
 	"gopkg.in/yaml.v3"
-	"log"
+	log2 "log"
 	"os"
 )
+
+const defaultConfFile = "./config.yml"
 
 type Config struct {
 	Server     server     `yaml:"server"`
 	Postgres   postgres   `yaml:"postgres"`
 	Clickhouse clickhouse `yaml:"clickhouse"`
+	Log        log        `yaml:"log"`
 }
 
 var singleton *Config
 
-func New() *Config {
+func Load() *Config {
 	if singleton == nil {
-		file, err := os.Open("config.yml")
+		file, err := os.Open(defaultConfFile)
 		if err != nil {
-			log.Fatal(err)
+			log2.Fatal(err)
 		}
-		defer func(file *os.File) {
-			err := file.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-		}(file)
+		defer file.Close()
 
 		var cfg Config
 		decoder := yaml.NewDecoder(file)
-		err = decoder.Decode(cfg)
+		err = decoder.Decode(&cfg)
 		if err != nil {
-			log.Fatal(err)
+			log2.Fatal(err)
 		}
+
+		cfg.Postgres.fillDefault()
+		cfg.Log.fillDefault()
 
 		singleton = &cfg
 	}

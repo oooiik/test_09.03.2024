@@ -8,9 +8,7 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	signalChan := make(chan os.Signal, 1)
 	defer close(signalChan)

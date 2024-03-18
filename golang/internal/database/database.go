@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
 
@@ -9,41 +8,34 @@ import (
 )
 
 type Interface interface {
-	Conn() *sql.Conn
-	Close()
+	DB() *sql.DB
 }
 
 type database struct {
-	conn *sql.Conn
+	db *sql.DB
 }
 
 func New(driver string, dataSourceName string) Interface {
 	logger.Debug("database@New", driver)
 
-	open, err := sql.Open(driver, dataSourceName)
+	db, err := sql.Open(driver, dataSourceName)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	defer open.Close()
+	defer db.Close()
 
-	ctx := context.Background()
-
-	conn, err := open.Conn(ctx)
+	err = db.Ping()
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	db := database{
-		conn: conn,
+	n := database{
+		db: db,
 	}
 
-	return &db
+	return &n
 }
 
-func (d *database) Conn() *sql.Conn {
-	return d.conn
-}
-
-func (d *database) Close() {
-	d.conn.Close()
+func (d *database) DB() *sql.DB {
+	return d.db
 }

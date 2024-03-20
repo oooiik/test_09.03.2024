@@ -28,6 +28,7 @@ func New(driver string, dataSourceName string) Interface {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	logger.Debug("database@New", driver, "Ping successful")
 
 	n := database{
 		db: db,

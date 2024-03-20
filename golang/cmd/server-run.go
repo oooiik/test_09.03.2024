@@ -5,6 +5,7 @@ import (
 	"github.com/oooiik/test_09.03.2024/internal/app"
 	"os"
 	"os/signal"
+	"time"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	defer func() {
 		<-signalChan
 		cancel()
+		time.Sleep(time.Second)
 		<-ctx.Done()
 	}()
 

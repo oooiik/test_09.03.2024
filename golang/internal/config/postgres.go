@@ -1,6 +1,8 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const DefaultPostgresPort = 5432
 
@@ -9,7 +11,7 @@ type postgres struct {
 	Port     int    `yaml:"port"`
 	Database string `yaml:"database"`
 	Username string `yaml:"user"`
-	Password string `yaml:"pass"`
+	Password string `yaml:"password"`
 }
 
 func (p *postgres) fillDefault() {

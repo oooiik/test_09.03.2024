@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/oooiik/test_09.03.2024/internal/config"
+	"github.com/oooiik/test_09.03.2024/internal/database"
 	"github.com/oooiik/test_09.03.2024/internal/http/controller"
 	"github.com/oooiik/test_09.03.2024/internal/http/router"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
+	"github.com/oooiik/test_09.03.2024/internal/model"
+	"github.com/oooiik/test_09.03.2024/internal/repository"
+	"github.com/oooiik/test_09.03.2024/internal/service"
 	"net/http"
 	"sync"
 )
@@ -59,11 +63,19 @@ func (h *httpProvider) ServerRun(c context.Context) {
 }
 
 func (h *httpProvider) initController() {
+	dbPostgres := database.New(config.Load().Postgres.Driver())
+
+	repositoryGoods := repository.New(dbPostgres, "goods", model.Good{})
+	serviceGoods := service.New(repositoryGoods)
+	controller.SingletonGood().SetService(serviceGoods)
+
 	// TODO
 }
+
 func (h *httpProvider) initRouter() {
 	h.router = router.New()
 }
+
 func (h *httpProvider) initServer() {
 	h.server = &http.Server{
 		Addr:    config.Load().Server.Adders(),

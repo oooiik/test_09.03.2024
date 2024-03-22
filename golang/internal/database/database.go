@@ -16,19 +16,18 @@ type database struct {
 }
 
 func New(driver string, dataSourceName string) Interface {
-	logger.Debug("database@New", driver)
+	logger.Debug("database@New ", driver)
 
 	db, err := sql.Open(driver, dataSourceName)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
 		logger.Fatal(err)
 	}
-	logger.Debug("database@New", driver, "Ping successful")
+	logger.Debug("database@New ", driver, " Ping successful")
 
 	n := database{
 		db: db,

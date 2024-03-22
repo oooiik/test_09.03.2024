@@ -8,7 +8,6 @@ import (
 	"github.com/oooiik/test_09.03.2024/internal/http/controller"
 	"github.com/oooiik/test_09.03.2024/internal/http/router"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
-	"github.com/oooiik/test_09.03.2024/internal/model"
 	"github.com/oooiik/test_09.03.2024/internal/repository"
 	"github.com/oooiik/test_09.03.2024/internal/service"
 	"net/http"
@@ -20,15 +19,14 @@ type Http interface {
 }
 
 type httpProvider struct {
-	router      *router.Router
-	controllers []*controller.Interface
-	server      *http.Server
+	router *router.Router
+	server *http.Server
 }
 
 func NewHttp() Http {
 	h := httpProvider{}
-	h.initController()
 	h.initRouter()
+	h.initController()
 	h.initServer()
 	return &h
 }
@@ -65,9 +63,11 @@ func (h *httpProvider) ServerRun(c context.Context) {
 func (h *httpProvider) initController() {
 	dbPostgres := database.New(config.Load().Postgres.Driver())
 
-	repositoryGoods := repository.New(dbPostgres, "goods", model.Good{})
-	serviceGoods := service.New(repositoryGoods)
-	controller.SingletonGood().SetService(serviceGoods)
+	repositoryGoods := repository.NewGood(dbPostgres)
+	serviceGoods := service.NewGood(repositoryGoods)
+	controllerGoods := controller.NewGood(serviceGoods)
+
+	h.router.ApiGoods(controllerGoods)
 
 	// TODO
 }

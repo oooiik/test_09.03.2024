@@ -21,20 +21,14 @@ type good struct {
 	service service.Good
 }
 
-var singletonGood *good
-
-func SingletonGood() Good {
-	if singletonGood != nil {
-		return singletonGood
+func NewGood(service service.Good) Good {
+	return &good{
+		service: service,
 	}
-
-	singletonGood = &good{}
-
-	return singletonGood
 }
 
 func (c good) Index(ctx *gin.Context) {
-	var req request.GoodIndex
+	req := request.GoodIndex{Limit: 10, Offset: 0}
 	err := ctx.ShouldBindUri(&req)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))

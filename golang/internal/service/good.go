@@ -47,7 +47,6 @@ func (s good) Create(req request.GoodCreate) (*model.Good, error) {
 		ProjectId:   req.ProjectId,
 		Name:        req.Name,
 		Description: req.Description,
-		Priority:    req.Priority,
 	})
 
 	c, err := s.repository.Create(m)
@@ -79,11 +78,44 @@ func (s good) Update(req request.GoodUpdate) (*model.Good, error) {
 }
 
 func (s good) Delete(id uint32) (*model.Good, error) {
-	//TODO implement me
-	panic("implement me")
+	m, err := s.repository.GetById(id)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	err = s.repository.Delete(m)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	return m, nil
 }
 
 func (s good) RePrioritize(req request.GoodRePrioritize) ([]*model.Good, error) {
-	//TODO implement me
-	panic("implement me")
+	f := &model.Good{}
+	f.Fill(&model.Good{
+		Id:        req.Id,
+		ProjectId: req.ProjectId,
+	})
+
+	list, err := s.repository.ListWithFilters(f)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	listUpdate := make([]*model.Good, len(list))
+
+	for i, v := range list {
+		v.Fill(&model.Good{
+			Priority: req.Priority,
+		})
+		listUpdate[i], err = s.repository.Update(v)
+		if err != nil {
+			logger.Error(err)
+			return nil, err
+		}
+	}
+
+	return listUpdate, err
 }

@@ -44,30 +44,6 @@ func (m *Good) Fill(f *Good) {
 	}
 }
 
-func (m *Good) ToFilters() map[string]interface{} {
-	filters := make(map[string]interface{})
-
-	refTypeOf := reflect.TypeOf(*m)
-
-	if field, ok := refTypeOf.FieldByName("Id"); m.Id != 0 && ok {
-		filters[field.Tag.Get("db")] = m.Id
-	}
-
-	if field, ok := refTypeOf.FieldByName("ProjectId"); m.ProjectId != 0 && ok {
-		filters[field.Tag.Get("db")] = m.ProjectId
-	}
-
-	if field, ok := refTypeOf.FieldByName("Name"); m.Name != "" && ok {
-		filters[field.Tag.Get("db")] = m.Name
-	}
-
-	if field, ok := refTypeOf.FieldByName("Priority"); m.Priority != 0 && ok {
-		filters[field.Tag.Get("db")] = m.Priority
-	}
-
-	return filters
-}
-
 func (m *Good) Scan(rows *sql.Rows) error {
 	cols, err := rows.Columns()
 	if err != nil {

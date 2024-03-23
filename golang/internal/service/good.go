@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/oooiik/test_09.03.2024/internal/filters"
 	"github.com/oooiik/test_09.03.2024/internal/http/request"
+	"github.com/oooiik/test_09.03.2024/internal/http/response"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
 	"github.com/oooiik/test_09.03.2024/internal/model"
 	"github.com/oooiik/test_09.03.2024/internal/repository"
@@ -14,6 +16,7 @@ type Good interface {
 	Update(req request.GoodUpdate) (*model.Good, error)
 	Delete(id uint32) (*model.Good, error)
 	RePrioritize(req request.GoodRePrioritize) ([]*model.Good, error)
+	Meta() (*response.Meta, error)
 }
 
 type good struct {
@@ -27,7 +30,10 @@ func NewGood(r repository.Good) Good {
 }
 
 func (s good) Index(req request.GoodIndex) ([]*model.Good, error) {
-	list, err := s.repository.ListWithPagination(req.Limit, req.Offset)
+	list, err := s.repository.ListWithFilters(&filters.Good{
+		Limit:  &req.Limit,
+		Offset: &req.Offset,
+	})
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -35,7 +41,7 @@ func (s good) Index(req request.GoodIndex) ([]*model.Good, error) {
 	return list, nil
 }
 
-func (s good) Show(id uint32) (*model.Good, error) {
+func (s good) Show(_ uint32) (*model.Good, error) {
 	//TODO implement me
 	return nil, nil
 }
@@ -90,13 +96,11 @@ func (s good) Delete(id uint32) (*model.Good, error) {
 }
 
 func (s good) RePrioritize(req request.GoodRePrioritize) ([]*model.Good, error) {
-	f := &model.Good{}
-	f.Fill(&model.Good{
-		Id:        req.Id,
-		ProjectId: req.ProjectId,
+	logger.Debug("service.RePrioritize")
+	list, err := s.repository.ListWithFilters(&filters.Good{
+		Id:        &req.Id,
+		ProjectId: &req.ProjectId,
 	})
-
-	list, err := s.repository.ListWithFilters(f)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -116,4 +120,21 @@ func (s good) RePrioritize(req request.GoodRePrioritize) ([]*model.Good, error) 
 	}
 
 	return listUpdate, err
+}
+
+func (s *good) Meta() (*response.Meta, error) {
+	total, err := s.repository.CountWithFilters(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r := true
+	removed, err := s.repository.CountWithFilters(&filters.Good{
+		Removed: &r,
+	})
+
+	return &response.Meta{
+		Total:   total,
+		Removed: removed,
+	}, nil
 }

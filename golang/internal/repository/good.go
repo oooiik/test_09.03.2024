@@ -1,21 +1,22 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 	"github.com/oooiik/test_09.03.2024/internal/database"
+	"github.com/oooiik/test_09.03.2024/internal/filters"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
 	"github.com/oooiik/test_09.03.2024/internal/model"
 	"strings"
 )
 
 type Good interface {
-	ListWithPagination(limit, offset uint32) ([]*model.Good, error)
-	ListWithFilters(model *model.Good) ([]*model.Good, error)
 	GetById(id uint32) (*model.Good, error)
 	Create(model *model.Good) (*model.Good, error)
 	Update(model *model.Good) (*model.Good, error)
 	Delete(model *model.Good) (*model.Good, error)
+
+	ListWithFilters(model *filters.Good) ([]*model.Good, error)
+	CountWithFilters(model *filters.Good) (uint, error)
 }
 
 type good struct {
@@ -29,30 +30,6 @@ func NewGood(db database.Interface) Good {
 		table: "goods",
 	}
 }
-func (r *good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false LIMIT $1 OFFSET $2", r.table)
-	logger.Debug(query)
-	rows, err := r.sql.DB().Query(query, limit, offset)
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	list := make([]*model.Good, 0)
-
-	for rows.Next() {
-		i := &model.Good{}
-		err := i.Scan(rows)
-		if err != nil {
-			logger.Error(err)
-			return nil, err
-		}
-		list = append(list, i)
-	}
-
-	return list, nil
-}
-
 func (r *good) GetById(id uint32) (*model.Good, error) {
 	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false AND id = $1 LIMIT 1", r.table)
 	logger.Debug(query, "; args:", id)
@@ -163,25 +140,46 @@ func (r *good) Delete(m *model.Good) (*model.Good, error) {
 	return m, nil
 }
 
-func (r good) ListWithFilters(m *model.Good) ([]*model.Good, error) {
-	filters := m.ToFilters()
-
-	if len(filters) < 1 {
-		return nil, errors.New("filters empty")
+func (r *good) queryFromFilters(f *filters.Good, isCount bool) (string, []any) {
+	if f == nil {
+		f = &filters.Good{}
 	}
+	filterList := f.ToFilters()
 
 	var fils []string
 	var vals []any
 
 	i := 1
-	for k, v := range filters {
+	for k, v := range filterList {
 		fils = append(fils, fmt.Sprintf("%s = $%d", k, i))
 		vals = append(vals, v)
 		i++
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE %s ", r.table, strings.Join(fils, " AND "))
+	fils = append(fils, "true") // protection for sql WHERE
 
+	sel := "*"
+	if isCount {
+		sel = "COUNT(*)"
+	}
+
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s", sel, r.table, strings.Join(fils, " AND "))
+
+	logger.Debug(f)
+
+	if f.Limit != nil {
+		query += fmt.Sprintf(" LIMIT %d", *f.Limit)
+		if f.Offset != nil {
+			query += fmt.Sprintf(" OFFSET %d", *f.Offset)
+		}
+	}
+
+	logger.Debug(query, "; args: ", vals)
+	return query, vals
+}
+
+func (r good) ListWithFilters(f *filters.Good) ([]*model.Good, error) {
+	query, vals := r.queryFromFilters(f, false)
 	rows, err := r.sql.DB().Query(query, vals...)
 	if err != nil {
 		logger.Error(err)
@@ -199,4 +197,16 @@ func (r good) ListWithFilters(m *model.Good) ([]*model.Good, error) {
 	}
 
 	return list, nil
+}
+
+func (r good) CountWithFilters(f *filters.Good) (uint, error) {
+	query, vals := r.queryFromFilters(f, true)
+	var count uint
+	err := r.sql.DB().QueryRow(query, vals...).Scan(&count)
+	if err != nil {
+		logger.Error(err)
+		return 0, err
+	}
+
+	return count, nil
 }

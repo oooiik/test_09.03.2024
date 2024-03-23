@@ -1,7 +1,6 @@
 package response
 
 import (
-	"github.com/oooiik/test_09.03.2024/internal/logger"
 	"github.com/oooiik/test_09.03.2024/internal/model"
 )
 
@@ -16,7 +15,6 @@ type Good struct {
 }
 
 func GoodResponse(m *model.Good) *Good {
-	logger.Debug(m)
 	return &Good{
 		Id:          m.Id,
 		ProjectId:   m.ProjectId,
@@ -30,11 +28,13 @@ func GoodResponse(m *model.Good) *Good {
 
 type GoodList struct {
 	Goods []*Good `json:"goods"`
+	Meta  *Meta   `json:"meta"`
 }
 
-func GoodListResponse(list []*model.Good) *GoodList {
+func GoodListResponse(list []*model.Good, meta *Meta) *GoodList {
 	l := GoodList{
 		Goods: make([]*Good, len(list)),
+		Meta:  meta,
 	}
 	for i, v := range list {
 		l.Goods[i] = GoodResponse(v)

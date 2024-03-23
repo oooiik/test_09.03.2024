@@ -1,8 +1,8 @@
 package request
 
 type GoodIndex struct {
-	Limit  uint32 `json:"limit" form:"limit" binding:"numeric"`
-	Offset uint32 `json:"offset" form:"offset" binding:"numeric"`
+	Limit  uint `json:"limit" form:"limit" binding:"numeric"`
+	Offset uint `json:"offset" form:"offset" binding:"numeric"`
 }
 
 // INFO: why projectId and not project_id

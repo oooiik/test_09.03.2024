@@ -9,3 +9,10 @@ func Err(err error) *Error {
 		Message: err.Error(),
 	}
 }
+
+type Meta struct {
+	Total   uint `json:"total"`
+	Removed uint `json:"removed"`
+	Limit   uint `json:"limit"`
+	Offset  uint `json:"offset"`
+}

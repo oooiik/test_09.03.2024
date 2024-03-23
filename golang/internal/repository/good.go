@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/oooiik/test_09.03.2024/internal/database"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
@@ -28,7 +29,7 @@ func NewGood(db database.Interface) Good {
 		table: "goods",
 	}
 }
-func (r good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
+func (r *good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
 	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false LIMIT $1 OFFSET $2", r.table)
 	logger.Debug(query)
 	rows, err := r.sql.DB().Query(query, limit, offset)
@@ -52,7 +53,7 @@ func (r good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
 	return list, nil
 }
 
-func (r good) GetById(id uint32) (*model.Good, error) {
+func (r *good) GetById(id uint32) (*model.Good, error) {
 	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false AND id = $1 LIMIT 1", r.table)
 	logger.Debug(query, "; args:", id)
 	rows, err := r.sql.DB().Query(query, id)
@@ -72,7 +73,7 @@ func (r good) GetById(id uint32) (*model.Good, error) {
 	return nil, nil
 }
 
-func (r good) Create(m *model.Good) (*model.Good, error) {
+func (r *good) Create(m *model.Good) (*model.Good, error) {
 	var cols []string
 	var vals []any
 	var plhs string
@@ -105,7 +106,7 @@ func (r good) Create(m *model.Good) (*model.Good, error) {
 	return r.GetById(id)
 }
 
-func (r good) Update(m *model.Good) (*model.Good, error) {
+func (r *good) Update(m *model.Good) (*model.Good, error) {
 	var sets string
 	var vals []any
 
@@ -139,7 +140,7 @@ func (r good) Update(m *model.Good) (*model.Good, error) {
 	return r.GetById(m.Id)
 }
 
-func (r good) Delete(m *model.Good) (*model.Good, error) {
+func (r *good) Delete(m *model.Good) (*model.Good, error) {
 	query := fmt.Sprintf("UPDATE %s SET removed = true WHERE id = %d", r.table, m.Id)
 	logger.Debug(query, m.Id)
 
@@ -162,7 +163,40 @@ func (r good) Delete(m *model.Good) (*model.Good, error) {
 	return m, nil
 }
 
-func (r good) ListWithFilters(model *model.Good) ([]*model.Good, error) {
-	//TODO implement me
-	panic("implement me")
+func (r good) ListWithFilters(m *model.Good) ([]*model.Good, error) {
+	filters := m.ToFilters()
+
+	if len(filters) < 1 {
+		return nil, errors.New("filters empty")
+	}
+
+	var fils []string
+	var vals []any
+
+	i := 1
+	for k, v := range filters {
+		fils = append(fils, fmt.Sprintf("%s = $%d", k, i))
+		vals = append(vals, v)
+		i++
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s ", r.table, strings.Join(fils, " AND "))
+
+	rows, err := r.sql.DB().Query(query, vals...)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	var list []*model.Good
+	for rows.Next() {
+		l := &model.Good{}
+		err := l.Scan(rows)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, l)
+	}
+
+	return list, nil
 }

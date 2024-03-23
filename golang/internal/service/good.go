@@ -13,7 +13,6 @@ type Good interface {
 	Create(req request.GoodCreate) (*model.Good, error)
 	Update(req request.GoodUpdate) (*model.Good, error)
 	Delete(id uint32) (*model.Good, error)
-
 	RePrioritize(req request.GoodRePrioritize) ([]*model.Good, error)
 }
 

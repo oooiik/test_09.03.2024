@@ -102,7 +102,7 @@ func (c good) Delete(ctx *gin.Context) {
 
 func (c good) RePrioritize(ctx *gin.Context) {
 	var req request.GoodRePrioritize
-	err := ctx.ShouldBindUri(&req)
+	err := ctx.BindJSON(&req)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 		return

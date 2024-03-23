@@ -14,7 +14,7 @@ type Good struct {
 	Id          uint32     `db:"id" allow:"r"`
 	ProjectId   uint32     `db:"project_id" allow:"c,r"`
 	Name        string     `db:"name" allow:"c,u,r"`
-	Description string     `db:"description" allow:"u"`
+	Description string     `db:"description" allow:"u"` // INFO: why description not readonly
 	Priority    uint32     `db:"priority" allow:"u,r"`
 	Removed     bool       `db:"removed" allow:"u,r"`
 	CreatedAt   *time.Time `db:"created_at" allow:"r"`
@@ -44,6 +44,30 @@ func (m *Good) Fill(f *Good) {
 	}
 }
 
+func (m *Good) ToFilters() map[string]interface{} {
+	filters := make(map[string]interface{})
+
+	refTypeOf := reflect.TypeOf(*m)
+
+	if field, ok := refTypeOf.FieldByName("Id"); m.Id != 0 && ok {
+		filters[field.Tag.Get("db")] = m.Id
+	}
+
+	if field, ok := refTypeOf.FieldByName("ProjectId"); m.ProjectId != 0 && ok {
+		filters[field.Tag.Get("db")] = m.ProjectId
+	}
+
+	if field, ok := refTypeOf.FieldByName("Name"); m.Name != "" && ok {
+		filters[field.Tag.Get("db")] = m.Name
+	}
+
+	if field, ok := refTypeOf.FieldByName("Priority"); m.Priority != 0 && ok {
+		filters[field.Tag.Get("db")] = m.Priority
+	}
+
+	return filters
+}
+
 func (m *Good) Scan(rows *sql.Rows) error {
 	cols, err := rows.Columns()
 	if err != nil {
@@ -61,12 +85,24 @@ func (m *Good) Scan(rows *sql.Rows) error {
 		return err
 	}
 
+	toReads := m.ToRead()
 	refTypeOf := reflect.TypeOf(*m)
 	refValueOf := reflect.ValueOf(m).Elem()
 
 	for i := 0; i < refTypeOf.NumField(); i++ {
 		field := refTypeOf.Field(i)
 		tag := field.Tag.Get("db")
+		isRead := false
+		for _, toRead := range toReads {
+			if tag == toRead {
+				isRead = true
+			}
+		}
+
+		if !isRead {
+			continue
+		}
+
 		for iCol, col := range cols {
 			if tag == col {
 				fieldValue := refValueOf.Field(i)
@@ -92,7 +128,7 @@ func (m *Good) Scan(rows *sql.Rows) error {
 	return nil
 }
 
-func (m *Good) ToDbList() map[string]any {
+func (m *Good) toDbList() map[string]any {
 	result := make(map[string]interface{})
 
 	refTypeOf := reflect.TypeOf(*m)
@@ -113,7 +149,7 @@ func (m *Good) ToDbList() map[string]any {
 }
 
 func (m *Good) toOrm(tagKey, key string) map[string]interface{} {
-	values := m.ToDbList()
+	values := m.toDbList()
 
 	refTypeOf := reflect.TypeOf(*m)
 	for i := 0; i < refTypeOf.NumField(); i++ {
@@ -145,6 +181,13 @@ func (m *Good) ToUpdate() map[string]interface{} {
 	return m.toOrm("allow", "u")
 }
 
-func (m *Good) ToRead() map[string]interface{} {
-	return m.toOrm("allow", "r")
+func (m *Good) ToRead() []string {
+	mapR := m.toOrm("allow", "r")
+	keys := make([]string, 0, len(mapR))
+
+	for k := range m.toOrm("allow", "r") {
+		keys = append(keys, k)
+	}
+
+	return keys
 }

@@ -5,6 +5,7 @@ type GoodIndex struct {
 	Offset uint32 `json:"offset" form:"offset" binding:"numeric"`
 }
 
+// INFO: why projectId and not project_id
 type GoodCreate struct {
 	ProjectId   uint32 `json:"projectId" binding:"required"`
 	Name        string `json:"name" binding:"required"`
@@ -22,8 +23,9 @@ type GoodDelete struct {
 	Id uint32 `uri:"id" binding:"required"`
 }
 
+// INFO: why multi required projectId or id
 type GoodRePrioritize struct {
-	Id        uint32 `json:"id" uri:"id"`
-	ProjectId uint32 `json:"project_id" uri:"project_id"`
-	Priority  uint32 `json:"priority" uri:"priority" binding:"required"`
+	Id        uint32 `json:"id" binding:"required"`
+	ProjectId uint32 `json:"projectId" binding:"required"`
+	Priority  uint32 `json:"priority" binding:"required"`
 }

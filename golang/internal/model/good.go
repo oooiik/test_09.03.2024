@@ -112,27 +112,39 @@ func (m *Good) ToDbList() map[string]any {
 	return result
 }
 
-func (m *Good) ToCreate() map[string]interface{} {
+func (m *Good) toOrm(tagKey, key string) map[string]interface{} {
 	values := m.ToDbList()
 
 	refTypeOf := reflect.TypeOf(*m)
 	for i := 0; i < refTypeOf.NumField(); i++ {
 		field := refTypeOf.Field(i)
-		tag := field.Tag.Get("allow")
+		tag := field.Tag.Get(tagKey)
 		keys := strings.Split(tag, ",")
 
-		isCreate := false
+		has := false
 		for _, k := range keys {
-			if k == "c" {
-				isCreate = true
+			if k == key {
+				has = true
 				break
 			}
 		}
 
-		if !isCreate {
+		if !has {
 			delete(values, field.Tag.Get("db"))
 		}
 	}
 
 	return values
+}
+
+func (m *Good) ToCreate() map[string]interface{} {
+	return m.toOrm("allow", "c")
+}
+
+func (m *Good) ToUpdate() map[string]interface{} {
+	return m.toOrm("allow", "u")
+}
+
+func (m *Good) ToRead() map[string]interface{} {
+	return m.toOrm("allow", "r")
 }

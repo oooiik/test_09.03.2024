@@ -12,11 +12,10 @@ type GoodCreate struct {
 }
 
 type GoodUpdate struct {
-	Id          uint32 `json:"id" uri:"id"`
-	ProjectId   uint32 `json:"project_id" uri:"project_id"`
-	Name        string `json:"name" uri:"name"`
+	Id          uint32 `json:"id" binding:"required"`
+	ProjectId   uint32 `json:"projectId" binding:"required"`
+	Name        string `json:"name"  binding:""`
 	Description string `json:"description"`
-	Priority    uint32 `json:"priority"`
 }
 
 type GoodDelete struct {

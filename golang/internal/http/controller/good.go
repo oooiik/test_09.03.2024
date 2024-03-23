@@ -67,11 +67,12 @@ func (c good) Create(ctx *gin.Context) {
 
 func (c good) Update(ctx *gin.Context) {
 	var req request.GoodUpdate
-	err := ctx.ShouldBindUri(&req)
+	err := ctx.BindJSON(&req)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 		return
 	}
+
 	model, err := c.service.Update(req)
 	if err != nil {
 		logger.Error(err)

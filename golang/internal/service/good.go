@@ -68,7 +68,6 @@ func (s good) Update(req request.GoodUpdate) (*model.Good, error) {
 		ProjectId:   req.ProjectId,
 		Name:        req.Name,
 		Description: req.Description,
-		Priority:    req.Priority,
 	})
 	u, err := s.repository.Update(m)
 	if err != nil {

@@ -105,9 +105,38 @@ func (r good) Create(m *model.Good) (*model.Good, error) {
 	return r.GetById(id)
 }
 
-func (r good) Update(model *model.Good) (*model.Good, error) {
-	//TODO implement me
-	panic("implement me")
+func (r good) Update(m *model.Good) (*model.Good, error) {
+	var sets string
+	var vals []any
+
+	i := 1
+	for c, v := range m.ToUpdate() {
+		sets += fmt.Sprintf("%s = $%d, ", c, i)
+		vals = append(vals, v)
+		i++
+	}
+
+	query := fmt.Sprintf(
+		"UPDATE %s SET %s WHERE id = %d",
+		r.table,
+		sets[:len(sets)-2],
+		m.Id,
+	)
+	logger.Debug(query, vals)
+
+	res, err := r.sql.DB().Exec(query, vals...)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	_, err = res.RowsAffected()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	return r.GetById(m.Id)
 }
 
 func (r good) Delete(model *model.Good) error {

@@ -1,22 +1,22 @@
 package request
 
 type GoodIndex struct {
-	Limit  uint32 `json:"limit" uri:"limit" binding:"numeric"`
-	Offset uint32 `json:"offset" uri:"limit" binding:"numeric"`
+	Limit  uint32 `json:"limit" form:"limit" binding:"numeric"`
+	Offset uint32 `json:"offset" form:"offset" binding:"numeric"`
 }
 
 type GoodCreate struct {
-	ProjectId   uint32 `json:"project_id" uri:"project_id" binding:"required"`
-	Name        string `json:"name" uri:"name" binding:"required"`
-	Description string `db:"description"`
+	ProjectId   uint32 `json:"projectId" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
 }
 
 type GoodUpdate struct {
 	Id          uint32 `json:"id" uri:"id"`
 	ProjectId   uint32 `json:"project_id" uri:"project_id"`
 	Name        string `json:"name" uri:"name"`
-	Description string `db:"description"`
-	Priority    uint32 `db:"priority"`
+	Description string `json:"description"`
+	Priority    uint32 `json:"priority"`
 }
 
 type GoodDelete struct {

@@ -4,17 +4,20 @@ import (
 	"database/sql"
 	"github.com/oooiik/test_09.03.2024/internal/logger"
 	"reflect"
+	"strings"
 	"time"
 )
 
+// db tag - column name in table
+// allow: r - read, c - create, u - update
 type Good struct {
-	Id          uint32     `db:"id"`
-	ProjectId   uint32     `db:"project_id"`
-	Name        string     `db:"name"`
-	Description string     `db:"description"`
-	Priority    uint32     `db:"priority"`
-	Removed     bool       `db:"removed"`
-	CreatedAt   *time.Time `db:"created_at"`
+	Id          uint32     `db:"id" allow:"r"`
+	ProjectId   uint32     `db:"project_id" allow:"c,r"`
+	Name        string     `db:"name" allow:"c,u,r"`
+	Description string     `db:"description" allow:"u"`
+	Priority    uint32     `db:"priority" allow:"u,r"`
+	Removed     bool       `db:"removed" allow:"u,r"`
+	CreatedAt   *time.Time `db:"created_at" allow:"r"`
 }
 
 func (m *Good) Fill(f *Good) {
@@ -67,17 +70,18 @@ func (m *Good) Scan(rows *sql.Rows) error {
 		for iCol, col := range cols {
 			if tag == col {
 				fieldValue := refValueOf.Field(i)
-				if fieldValue.IsValid() && fieldValue.CanSet() {
+				refValueRes := reflect.ValueOf(*scanArgs[iCol].(*interface{}))
+				if fieldValue.IsValid() && fieldValue.CanSet() && refValueRes.IsValid() {
 					// Check is pointer
 					if fieldValue.Kind() == reflect.Ptr {
 						if scanArgs[iCol] != nil {
 							// Create new pointed type
 							val := reflect.New(fieldValue.Type().Elem())
-							val.Elem().Set(reflect.ValueOf(*scanArgs[iCol].(*interface{})).Convert(fieldValue.Type().Elem()))
+							val.Elem().Set(refValueRes.Convert(fieldValue.Type().Elem()))
 							fieldValue.Set(val)
 						}
 					} else {
-						fieldValue.Set(reflect.ValueOf(*scanArgs[iCol].(*interface{})).Convert(fieldValue.Type()))
+						fieldValue.Set(refValueRes.Convert(fieldValue.Type()))
 					}
 				}
 				break
@@ -92,19 +96,43 @@ func (m *Good) ToDbList() map[string]any {
 	result := make(map[string]interface{})
 
 	refTypeOf := reflect.TypeOf(*m)
-	refValueOf := reflect.ValueOf(m)
+	refValueOf := reflect.ValueOf(m).Elem()
 
 	for i := 0; i < refTypeOf.NumField(); i++ {
 		field := refTypeOf.Field(i)
-		value := refValueOf.Field(i).Interface()
 
 		key := field.Tag.Get("db")
 		if key == "" {
-			break
+			continue
 		}
 
-		result[key] = value
+		fieldValue := refValueOf.Field(i).Interface()
+		result[key] = fieldValue
+	}
+	return result
+}
+
+func (m *Good) ToCreate() map[string]interface{} {
+	values := m.ToDbList()
+
+	refTypeOf := reflect.TypeOf(*m)
+	for i := 0; i < refTypeOf.NumField(); i++ {
+		field := refTypeOf.Field(i)
+		tag := field.Tag.Get("allow")
+		keys := strings.Split(tag, ",")
+
+		isCreate := false
+		for _, k := range keys {
+			if k == "c" {
+				isCreate = true
+				break
+			}
+		}
+
+		if !isCreate {
+			delete(values, field.Tag.Get("db"))
+		}
 	}
 
-	return result
+	return values
 }

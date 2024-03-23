@@ -29,7 +29,7 @@ func NewGood(service service.Good) Good {
 
 func (c good) Index(ctx *gin.Context) {
 	req := request.GoodIndex{Limit: 10, Offset: 0}
-	err := ctx.ShouldBindUri(&req)
+	err := ctx.Bind(&req)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 		return
@@ -47,11 +47,13 @@ func (c good) Index(ctx *gin.Context) {
 
 func (c good) Create(ctx *gin.Context) {
 	var req request.GoodCreate
-	err := ctx.ShouldBindUri(&req)
+	err := ctx.BindJSON(&req)
 	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 		return
 	}
+
+	logger.Debug(req)
 
 	model, err := c.service.Create(req)
 	if err != nil {

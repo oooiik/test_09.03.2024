@@ -3,5 +3,6 @@ package model
 type Interface interface {
 }
 
-type Model struct {
+type Scan interface {
+	Scan(dest ...any) error
 }

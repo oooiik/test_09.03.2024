@@ -1,6 +1,7 @@
 package response
 
 import (
+	"github.com/oooiik/test_09.03.2024/internal/logger"
 	"github.com/oooiik/test_09.03.2024/internal/model"
 )
 
@@ -15,6 +16,7 @@ type Good struct {
 }
 
 func GoodResponse(m *model.Good) *Good {
+	logger.Debug(m)
 	return &Good{
 		Id:          m.Id,
 		ProjectId:   m.ProjectId,
@@ -22,7 +24,7 @@ func GoodResponse(m *model.Good) *Good {
 		Description: m.Description,
 		Priority:    m.Priority,
 		Removed:     m.Removed,
-		CreatedAt:   m.CreatedAt.String(),
+		CreatedAt:   (*m.CreatedAt).String(),
 	}
 }
 

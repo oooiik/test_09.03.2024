@@ -29,9 +29,9 @@ func NewGood(db database.Interface) Good {
 	}
 }
 func (r good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false LIMIT %d OFFSET %d", r.table, limit, offset)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false LIMIT $1 OFFSET $2", r.table)
 	logger.Debug(query)
-	rows, err := r.sql.DB().Query(query)
+	rows, err := r.sql.DB().Query(query, limit, offset)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -53,45 +53,56 @@ func (r good) ListWithPagination(limit, offset uint32) ([]*model.Good, error) {
 }
 
 func (r good) GetById(id uint32) (*model.Good, error) {
-	//TODO implement me
-	panic("implement me")
+	query := fmt.Sprintf("SELECT * FROM %s WHERE removed = false AND id = $1 LIMIT 1", r.table)
+	logger.Debug(query, "; args:", id)
+	rows, err := r.sql.DB().Query(query, id)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		findModel := &model.Good{}
+		err := findModel.Scan(rows)
+		if err != nil {
+			return nil, err
+		}
+		return findModel, nil
+	}
+	return nil, nil
 }
 
-func (r good) Create(model *model.Good) (*model.Good, error) {
+func (r good) Create(m *model.Good) (*model.Good, error) {
 	var cols []string
 	var vals []any
+	var plhs string
 
-	for c, v := range model.ToDbList() {
+	i := 1
+	for c, v := range m.ToCreate() {
 		cols = append(cols, c)
 		vals = append(vals, v)
+		plhs += fmt.Sprintf("$%d, ", i)
+		i++
 	}
+	plhs = plhs[:len(plhs)-2]
 
 	query := fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES (%s)",
+		"INSERT INTO %s (%s) VALUES (%s) RETURNING id",
 		r.table,
 		strings.Join(cols, ", "),
-		strings.Join(make([]string, len(cols)), "?, ")+"?",
+		plhs,
 	)
 
-	res, err := r.sql.DB().Exec(query, vals...)
+	logger.Debug(query, vals)
+
+	var id uint32
+	err := r.sql.DB().QueryRow(query, vals...).Scan(&id)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
 	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	newModel, err := r.GetById(uint32(id))
-	if err != nil {
-		logger.Error(err)
-		return nil, err
-	}
-
-	return newModel, nil
+	logger.Debug(id)
+	return r.GetById(id)
 }
 
 func (r good) Update(model *model.Good) (*model.Good, error) {

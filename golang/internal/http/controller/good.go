@@ -73,7 +73,7 @@ func (c good) Create(ctx *gin.Context) {
 func (c good) Update(ctx *gin.Context) {
 	var req request.GoodUpdate
 
-	if err := ctx.BindJSON(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, response.Err(err))
 		return
 	}

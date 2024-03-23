@@ -169,9 +169,9 @@ func (r *good) queryFromFilters(f *filters.Good, isCount bool) (string, []any) {
 
 	if f.Limit != nil {
 		query += fmt.Sprintf(" LIMIT %d", *f.Limit)
-		if f.Offset != nil {
-			query += fmt.Sprintf(" OFFSET %d", *f.Offset)
-		}
+	}
+	if f.Offset != nil {
+		query += fmt.Sprintf(" OFFSET %d", *f.Offset)
 	}
 
 	logger.Debug(query, "; args: ", vals)

@@ -19,7 +19,7 @@ type GoodUpdate struct {
 }
 
 type GoodDelete struct {
-	Id uint32 `json:"id" uri:"id" binding:"required"`
+	Id uint32 `uri:"id" binding:"required"`
 }
 
 type GoodRePrioritize struct {

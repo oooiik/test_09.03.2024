@@ -14,7 +14,7 @@ type Good interface {
 	GetById(id uint32) (*model.Good, error)
 	Create(model *model.Good) (*model.Good, error)
 	Update(model *model.Good) (*model.Good, error)
-	Delete(model *model.Good) error
+	Delete(model *model.Good) (*model.Good, error)
 }
 
 type good struct {
@@ -139,9 +139,27 @@ func (r good) Update(m *model.Good) (*model.Good, error) {
 	return r.GetById(m.Id)
 }
 
-func (r good) Delete(model *model.Good) error {
-	//TODO implement me
-	panic("implement me")
+func (r good) Delete(m *model.Good) (*model.Good, error) {
+	query := fmt.Sprintf("UPDATE %s SET removed = true WHERE id = %d", r.table, m.Id)
+	logger.Debug(query, m.Id)
+
+	res, err := r.sql.DB().Exec(query)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	_, err = res.RowsAffected()
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+
+	m.Fill(&model.Good{
+		Removed: true,
+	})
+
+	return m, nil
 }
 
 func (r good) ListWithFilters(model *model.Good) ([]*model.Good, error) {

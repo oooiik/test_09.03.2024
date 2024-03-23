@@ -82,7 +82,7 @@ func (s good) Delete(id uint32) (*model.Good, error) {
 		logger.Error(err)
 		return nil, err
 	}
-	err = s.repository.Delete(m)
+	m, err = s.repository.Delete(m)
 	if err != nil {
 		logger.Error(err)
 		return nil, err

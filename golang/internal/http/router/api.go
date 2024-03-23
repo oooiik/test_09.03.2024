@@ -6,4 +6,5 @@ func (r *Router) ApiGoods(controller controller.Good) {
 	r.mux.GET("/goods", controller.Index)
 	r.mux.POST("/goods/create", controller.Create)
 	r.mux.PATCH("/goods/update", controller.Update)
+	r.mux.DELETE("/goods/remove/:id", controller.Delete)
 }
